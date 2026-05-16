@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --surface: #161920;
+    --surface2: #1e2229;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #4ade80;
+    --accent-dim: rgba(74,222,128,0.12);
+    --red: #f87171;
+    --amber: #fbbf24;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --tag-bg: rgba(255,255,255,0.06);
+    --radius: 10px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* LAYOUT */
+  .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 2rem 1.25rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: #0d0f12;
+    flex-shrink: 0;
+  }
+  .logo-text { font-size: 15px; font-weight: 500; letter-spacing: -0.2px; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .sidebar-section { display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+  .nav-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px;
+    border-radius: 7px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+    text-align: left;
+    width: 100%;
+  }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: var(--accent-dim); color: var(--accent); }
+  .nav-btn .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-easy { background: #4ade80; }
+  .dot-medium { background: #fbbf24; }
+  .dot-hard { background: #f87171; }
+  .dot-all { background: var(--muted); }
+
+  .nav-count {
+    margin-left: auto;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+
+  .streak-card {
+    background: var(--accent-dim);
+    border: 1px solid rgba(74,222,128,0.2);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-top: auto;
+  }
+  .streak-num { font-size: 28px; font-weight: 500; color: var(--accent); font-family: var(--mono); line-height: 1; }
+  .streak-lbl { font-size: 11px; color: rgba(74,222,128,0.7); margin-top: 4px; }
+
+  /* MAIN */
+  .main { display: flex; flex-direction: column; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(13,15,18,0.85);
+    backdrop-filter: blur(12px);
+  }
+  .topbar h1 { font-size: 16px; font-weight: 500; flex: 1; }
+  .search {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    width: 220px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search:focus { border-color: var(--border2); }
+  .search::placeholder { color: var(--muted); }
+
+  .add-btn-top {
+    background: var(--accent);
+    color: #0d0f12;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .15s;
+    white-space: nowrap;
+  }
+  .add-btn-top:hover { opacity: 0.88; }
+
+  /* CALENDAR STRIP */
+  .cal-strip {
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-strip-label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 10px; }
+  .cal-grid {
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .cal-cell {
+    width: 18px; height: 18px; border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: default;
+    transition: transform .1s;
+    position: relative;
+  }
+  .cal-cell.solved { background: var(--accent); border-color: rgba(74,222,128,0.4); }
+  .cal-cell.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .cal-cell:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 120%; left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 20;
+    font-family: var(--mono);
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .stat-val { font-size: 26px; font-weight: 500; font-family: var(--mono); color: var(--text); line-height: 1; }
+  .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* CONTENT */
+  .content { padding: 1.5rem 2rem; flex: 1; }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .empty-state .big { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; line-height: 1.7; }
+
+  /* CARDS */
+  .cards-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .15s;
+  }
+  .card:hover { border-color: var(--border2); }
+  .card.open { border-color: rgba(74,222,128,0.3); }
+
+  .card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .day-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 52px;
+  }
+
+  .diff-badge {
+    font-size: 10px; font-family: var(--mono);
+    padding: 3px 8px; border-radius: 20px;
+    font-weight: 400;
+  }
+  .diff-easy   { background: rgba(74,222,128,.12); color: #4ade80; }
+  .diff-medium { background: rgba(251,191,36,.12); color: #fbbf24; }
+  .diff-hard   { background: rgba(248,113,113,.12); color: #f87171; }
+
+  .card-title { flex: 1; font-size: 14px; font-weight: 400; color: var(--text); }
+
+  .topic-pill {
+    font-size: 11px; font-family: var(--mono);
+    padding: 3px 8px; border-radius: 20px;
+    background: var(--tag-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .card-actions { display: flex; gap: 6px; margin-left: 4px; }
+  .icon-btn {
+    background: none; border: none; color: var(--muted);
+    font-size: 14px; cursor: pointer; padding: 4px;
+    border-radius: 5px; transition: all .15s;
+    display: flex; align-items: center;
+  }
+  .icon-btn:hover { color: var(--text); background: var(--surface2); }
+  .icon-btn.del:hover { color: var(--red); }
+
+  .chevron { transition: transform .2s; font-size: 13px; color: var(--muted); }
+  .card.open .chevron { transform: rotate(180deg); }
+
+  .card-body { display: none; padding: 0 16px 16px; }
+  .card.open .card-body { display: block; }
+
+  .problem-text {
+    font-size: 13px; color: #9ca3af; line-height: 1.7;
+    margin-bottom: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .code-wrap {
+    background: #0a0c0f;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 12px;
+  }
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang { font-size: 10px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .copy-btn {
+    font-size: 11px; font-family: var(--mono);
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); padding: 3px 8px; border-radius: 5px;
+    cursor: pointer; transition: all .15s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--border2); }
+  .copy-btn.copied { color: var(--accent); border-color: rgba(74,222,128,0.3); }
+
+  .code-wrap pre {
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #c9d1d9;
+    white-space: pre;
+    margin: 0;
+  }
+
+  .kw  { color: #ff7b72; }
+  .fn  { color: #d2a8ff; }
+  .str { color: #a5d6ff; }
+  .cmt { color: #6e7681; font-style: italic; }
+  .num { color: #ffa657; }
+
+  .insight-box {
+    background: rgba(96,165,250,0.07);
+    border-left: 2px solid #60a5fa;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #93c5fd;
+    line-height: 1.7;
+  }
+  .insight-box strong { color: #60a5fa; font-weight: 500; }
+
+  /* MODAL */
+  .modal-bg {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center; justify-content: center;
+    padding: 2rem;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 2rem;
+    width: 100%; max-width: 580px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .modal h2 { font-size: 16px; font-weight: 500; }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: none; border: none; color: var(--muted);
+    font-size: 20px; cursor: pointer;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .field input, .field textarea, .field select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color .15s;
+    width: 100%;
+  }
+  .field textarea {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    resize: vertical;
+    min-height: 120px;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color: rgba(74,222,128,0.4);
+  }
+  .field select option { background: var(--surface2); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+  .btn-cancel {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); padding: 8px 18px; border-radius: 8px;
+    font-family: var(--sans); font-size: 13px; cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-cancel:hover { color: var(--text); border-color: var(--border2); }
+  .btn-save {
+    background: var(--accent); color: #0d0f12;
+    border: none; padding: 8px 20px; border-radius: 8px;
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: opacity .15s;
+  }
+  .btn-save:hover { opacity: 0.88; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .topbar { padding: 1rem; }
+    .content { padding: 1rem; }
+    .stats-row, .cal-strip { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">SQL</div>
+      <div>
+        <div class="logo-text">SQL Portfolio</div>
+        <div class="logo-sub">Daily practice log</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Filter by difficulty</div>
+      <button class="nav-btn active" onclick="setFilter('all',this)">
+        <span class="dot dot-all"></span> All problems
+        <span class="nav-count" id="cnt-all">0</span>
+      </button>
+      <button class="nav-btn" onclick="setFilter('easy',this)">
+        <span class="dot dot-easy"></span> Easy
+        <span class="nav-count" id="cnt-easy">0</span>
+      </button>
+      <button class="nav-btn" onclick="setFilter('medium',this)">
+        <span class="dot dot-medium"></span> Medium
+        <span class="nav-count" id="cnt-medium">0</span>
+      </button>
+      <button class="nav-btn" onclick="setFilter('hard',this)">
+        <span class="dot dot-hard"></span> Hard
+        <span class="nav-count" id="cnt-hard">0</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Filter by topic</div>
+      <button class="nav-btn" onclick="setFilter('joins',this)">JOINs</button>
+      <button class="nav-btn" onclick="setFilter('window',this)">Window functions</button>
+      <button class="nav-btn" onclick="setFilter('cte',this)">CTEs</button>
+      <button class="nav-btn" onclick="setFilter('aggregation',this)">Aggregation</button>
+      <button class="nav-btn" onclick="setFilter('subqueries',this)">Subqueries</button>
+      <button class="nav-btn" onclick="setFilter('indexes',this)">Indexes</button>
+      <button class="nav-btn" onclick="setFilter('other',this)">Other</button>
+    </div>
+
+    <div class="streak-card">
+      <div class="streak-num" id="sidebar-streak">0</div>
+      <div class="streak-lbl">day streak 🔥</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <h1 id="view-title">All problems</h1>
+      <input class="search" type="text" placeholder="Search problems…" oninput="handleSearch(this.value)">
+      <button class="add-btn-top" onclick="openModal()">+ Add problem</button>
+    </div>
+
+    <div class="cal-strip">
+      <div class="cal-strip-label" id="cal-label">MAY 2026 — activity</div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Problems solved</div></div>
+      <div class="stat-card"><div class="stat-val" id="s-streak">0</div><div class="stat-lbl">Day streak</div></div>
+      <div class="stat-card"><div class="stat-val" id="s-topics">0</div><div class="stat-lbl">Topics covered</div></div>
+      <div class="stat-card"><div class="stat-val" id="s-this-week">0</div><div class="stat-lbl">This week</div></div>
+    </div>
+
+    <div class="content">
+      <div id="cards-container"></div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-bg" id="modal" onclick="closeModalBg(event)">
+  <div class="modal">
+    <h2 id="modal-title">Log a problem</h2>
+
+    <div class="field">
+      <label>Problem title</label>
+      <input type="text" id="f-title" placeholder="e.g. Find duplicate emails in users table">
+    </div>
+
+    <div class="field">
+      <label>Problem description</label>
+      <textarea id="f-problem" placeholder="Describe the problem scenario, the tables involved, and what you need to return…"></textarea>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Difficulty</label>
+        <select id="f-diff">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Topic</label>
+        <select id="f-topic">
+          <option value="joins">JOINs</option>
+          <option value="window">Window functions</option>
+          <option value="cte">CTEs</option>
+          <option value="aggregation">Aggregation</option>
+          <option value="subqueries">Subqueries</option>
+          <option value="indexes">Indexes / Performance</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Your SQL solution</label>
+      <textarea id="f-sql" placeholder="SELECT ..." style="min-height:160px; font-size:12px;"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Key insight / what you learned</label>
+      <textarea id="f-insight" placeholder="What tripped you up? What's the important concept to remember?" style="min-height:80px;"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Source (optional)</label>
+      <input type="text" id="f-source" placeholder="e.g. LeetCode #176, StrataScratch, personal practice…">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveProblem()">Save problem</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STORAGE ──────────────────────────────────────────────
+const KEY = 'sql_portfolio_v1';
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch { return []; }
+}
+
+function save(data) {
+  localStorage.setItem(KEY, JSON.stringify(data));
+}
+
+// ── SEED DATA — 100 LeetCode SQL Problems ────────────────
+const seed = [
+  // ── EASY ─────────────────────────────────────────────
+  { id:'lc175', date:'2026-04-01', title:'Combine Two Tables (LC #175)', diff:'easy', topic:'joins', source:'LeetCode #175',
+    problem:'Table Person has personId, lastName, firstName. Table Address has addressId, personId, city, state. Report firstName, lastName, city, state for every person regardless of whether they have an address.',
+    sql:`SELECT p.firstName, p.lastName, a.city, a.state\nFROM Person p\nLEFT JOIN Address a ON p.personId = a.personId;`,
+    insight:'Classic LEFT JOIN intro — the key is recognising that "regardless of address" means LEFT JOIN, not INNER JOIN. Every person must appear even with NULL city/state.' },
+
+  { id:'lc176', date:'2026-04-01', title:'Second Highest Salary (LC #176)', diff:'easy', topic:'subqueries', source:'LeetCode #176',
+    problem:'Find the second highest distinct salary from the Employee table. Return NULL if it does not exist.',
+    sql:`SELECT MAX(salary) AS SecondHighestSalary\nFROM Employee\nWHERE salary < (SELECT MAX(salary) FROM Employee);`,
+    insight:'Using MAX with a subquery is cleaner than LIMIT/OFFSET — and naturally returns NULL when only one distinct salary exists, which satisfies the edge case.' },
+
+  { id:'lc177', date:'2026-04-02', title:'Nth Highest Salary (LC #177)', diff:'medium', topic:'window', source:'LeetCode #177',
+    problem:'Write a function that returns the Nth highest salary. Return NULL if it does not exist.',
+    sql:`CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT\nBEGIN\n  RETURN (\n    SELECT DISTINCT salary\n    FROM Employee\n    ORDER BY salary DESC\n    LIMIT 1 OFFSET N-1\n  );\nEND`,
+    insight:'LIMIT 1 OFFSET N-1 picks exactly the Nth row. DISTINCT is critical — without it offset counts duplicate rows and returns wrong results.' },
+
+  { id:'lc178', date:'2026-04-02', title:'Rank Scores (LC #178)', diff:'medium', topic:'window', source:'LeetCode #178',
+    problem:'Rank the scores in the Scores table. Ties share the same rank and the next rank should not be skipped (dense ranking).',
+    sql:`SELECT score,\n  DENSE_RANK() OVER (ORDER BY score DESC) AS rank\nFROM Scores\nORDER BY score DESC;`,
+    insight:'DENSE_RANK is the only correct function here — RANK skips numbers after ties, ROW_NUMBER ignores ties entirely. Memorise all three differences before interviews.' },
+
+  { id:'lc180', date:'2026-04-03', title:'Consecutive Numbers (LC #180)', diff:'medium', topic:'window', source:'LeetCode #180',
+    problem:'Find all numbers that appear at least three times consecutively in the Logs table (id is auto-increment, no gaps).',
+    sql:`SELECT DISTINCT l1.num AS ConsecutiveNums\nFROM Logs l1\nJOIN Logs l2 ON l2.id = l1.id + 1 AND l2.num = l1.num\nJOIN Logs l3 ON l3.id = l1.id + 2 AND l3.num = l1.num;`,
+    insight:'Self-joining on consecutive IDs is the classic approach. A window function alternative uses LAG/LEAD — but only works when IDs are gapless.' },
+
+  { id:'lc181', date:'2026-04-03', title:'Employees Earning More Than Their Managers (LC #181)', diff:'easy', topic:'joins', source:'LeetCode #181',
+    problem:'Find employees who earn more than their manager. Employee table has id, name, salary, managerId.',
+    sql:`SELECT e.name AS Employee\nFROM Employee e\nJOIN Employee m ON e.managerId = m.id\nWHERE e.salary > m.salary;`,
+    insight:'Self-join on the same table using different aliases. Always alias clearly (e for employee, m for manager) to keep the logic readable.' },
+
+  { id:'lc182', date:'2026-04-04', title:'Duplicate Emails (LC #182)', diff:'easy', topic:'aggregation', source:'LeetCode #182',
+    problem:'Find all duplicate emails in the Person table.',
+    sql:`SELECT email\nFROM Person\nGROUP BY email\nHAVING COUNT(*) > 1;`,
+    insight:'GROUP BY + HAVING COUNT > 1 is the canonical duplicate-finding pattern. HAVING filters groups, WHERE filters rows — never confuse the two.' },
+
+  { id:'lc183', date:'2026-04-04', title:'Customers Who Never Order (LC #183)', diff:'easy', topic:'subqueries', source:'LeetCode #183',
+    problem:'Find all customers who never placed an order. Customers table has id and name; Orders table has id and customerId.',
+    sql:`SELECT name AS Customers\nFROM Customers\nWHERE id NOT IN (SELECT customerId FROM Orders);`,
+    insight:'NOT IN works here because customerId is non-nullable. If the subquery could return NULLs, NOT IN breaks silently — use LEFT JOIN + IS NULL instead.' },
+
+  { id:'lc184', date:'2026-04-05', title:'Department Highest Salary (LC #184)', diff:'medium', topic:'subqueries', source:'LeetCode #184',
+    problem:'Find employees who have the highest salary in each department.',
+    sql:`SELECT d.name AS Department, e.name AS Employee, e.salary AS Salary\nFROM Employee e\nJOIN Department d ON e.departmentId = d.id\nWHERE (e.departmentId, e.salary) IN (\n  SELECT departmentId, MAX(salary)\n  FROM Employee\n  GROUP BY departmentId\n);`,
+    insight:'The tuple IN trick (col1, col2) IN (subquery returning two columns) is very clean. Alternatively use a CTE with RANK() OVER PARTITION BY departmentId.' },
+
+  { id:'lc185', date:'2026-04-05', title:'Department Top Three Salaries (LC #185)', diff:'hard', topic:'window', source:'LeetCode #185',
+    problem:'Find employees who are in the top 3 unique salary earners in their department.',
+    sql:`WITH ranked AS (\n  SELECT e.name, e.salary, d.name AS dept,\n    DENSE_RANK() OVER (PARTITION BY e.departmentId ORDER BY e.salary DESC) AS rnk\n  FROM Employee e\n  JOIN Department d ON e.departmentId = d.id\n)\nSELECT dept AS Department, name AS Employee, salary AS Salary\nFROM ranked\nWHERE rnk <= 3;`,
+    insight:'DENSE_RANK partitioned by department is the cleanest solution. Using RANK would skip rank numbers after ties; ROW_NUMBER would allow only 3 rows per department even with tied salaries.' },
+
+  { id:'lc196', date:'2026-04-06', title:'Delete Duplicate Emails (LC #196)', diff:'easy', topic:'joins', source:'LeetCode #196',
+    problem:'Delete all duplicate emails, keeping only the row with the smallest id.',
+    sql:`DELETE p1\nFROM Person p1\nJOIN Person p2\n  ON p1.email = p2.email AND p1.id > p2.id;`,
+    insight:'Self-join on DELETE is a classic. The condition p1.id > p2.id keeps the row with the smaller id. Note: MySQL allows this; some engines require a subquery workaround.' },
+
+  { id:'lc197', date:'2026-04-06', title:'Rising Temperature (LC #197)', diff:'easy', topic:'joins', source:'LeetCode #197',
+    problem:'Find all dates where temperature was higher than the previous day. Weather table has id, recordDate, temperature.',
+    sql:`SELECT w1.id\nFROM Weather w1\nJOIN Weather w2\n  ON DATEDIFF(w1.recordDate, w2.recordDate) = 1\nWHERE w1.temperature > w2.temperature;`,
+    insight:'DATEDIFF = 1 reliably finds consecutive days even with gaps in the id column. Never assume consecutive IDs map to consecutive dates.' },
+
+  { id:'lc262', date:'2026-04-07', title:'Trips and Users (LC #262)', diff:'hard', topic:'aggregation', source:'LeetCode #262',
+    problem:'Find the cancellation rate (rounded to 2 decimal places) for unbanned clients and drivers for each day between 2013-10-01 and 2013-10-03.',
+    sql:`SELECT t.request_at AS Day,\n  ROUND(SUM(t.status != 'completed') / COUNT(*), 2) AS "Cancellation Rate"\nFROM Trips t\nJOIN Users u1 ON t.client_id = u1.users_id AND u1.banned = 'No'\nJOIN Users u2 ON t.driver_id = u2.users_id AND u2.banned = 'No'\nWHERE t.request_at BETWEEN '2013-10-01' AND '2013-10-03'\nGROUP BY t.request_at;`,
+    insight:'Joining Users twice (once for client, once for driver) with the banned filter in the JOIN condition is cleaner than WHERE. SUM of a boolean condition counts TRUEs efficiently.' },
+
+  { id:'lc511', date:'2026-04-07', title:'Game Play Analysis I (LC #511)', diff:'easy', topic:'aggregation', source:'LeetCode #511',
+    problem:'Find the first login date for each player. Activity table has player_id, device_id, event_date, games_played.',
+    sql:`SELECT player_id, MIN(event_date) AS first_login\nFROM Activity\nGROUP BY player_id;`,
+    insight:'MIN(date) grouped by player is the simplest first-event pattern. Memorise this — it comes up constantly in product analytics questions.' },
+
+  { id:'lc512', date:'2026-04-08', title:'Game Play Analysis II (LC #512)', diff:'easy', topic:'subqueries', source:'LeetCode #512',
+    problem:'Report the device each player first logged in on.',
+    sql:`SELECT player_id, device_id\nFROM Activity\nWHERE (player_id, event_date) IN (\n  SELECT player_id, MIN(event_date)\n  FROM Activity\n  GROUP BY player_id\n);`,
+    insight:'Tuple-in-subquery pattern again — filter to only the rows matching each player\'s first date. A ROW_NUMBER() CTE is equally valid and often cleaner.' },
+
+  { id:'lc534', date:'2026-04-08', title:'Game Play Analysis III (LC #534)', diff:'medium', topic:'window', source:'LeetCode #534',
+    problem:'Report the running total of games played per player up to each date.',
+    sql:`SELECT player_id, event_date,\n  SUM(games_played) OVER (\n    PARTITION BY player_id\n    ORDER BY event_date\n  ) AS games_played_so_far\nFROM Activity;`,
+    insight:'Running sum with SUM() OVER (PARTITION BY ... ORDER BY ...). No explicit ROWS frame needed — default is RANGE UNBOUNDED PRECEDING which works for running totals.' },
+
+  { id:'lc550', date:'2026-04-09', title:'Game Play Analysis IV (LC #550)', diff:'medium', topic:'joins', source:'LeetCode #550',
+    problem:'Find the fraction of players that logged in again on the day after their first login, rounded to 2 decimal places.',
+    sql:`SELECT ROUND(\n  COUNT(DISTINCT a2.player_id) / COUNT(DISTINCT a1.player_id), 2\n) AS fraction\nFROM (\n  SELECT player_id, MIN(event_date) AS first_date\n  FROM Activity GROUP BY player_id\n) a1\nLEFT JOIN Activity a2\n  ON a1.player_id = a2.player_id\n  AND a2.event_date = DATE_ADD(a1.first_date, INTERVAL 1 DAY);`,
+    insight:'Left join from first-login dates to next-day activity. COUNT DISTINCT in numerator vs denominator handles missing next-day logins (they\'re NULL after LEFT JOIN).' },
+
+  { id:'lc569', date:'2026-04-09', title:'Median Employee Salary (LC #569)', diff:'hard', topic:'window', source:'LeetCode #569',
+    problem:'Find the median salary of each company. Median is the middle value; for even counts, both middle values qualify.',
+    sql:`WITH ranked AS (\n  SELECT id, company, salary,\n    ROW_NUMBER() OVER (PARTITION BY company ORDER BY salary, id) AS rn,\n    COUNT(*) OVER (PARTITION BY company) AS cnt\n  FROM Employee\n)\nSELECT id, company, salary\nFROM ranked\nWHERE rn BETWEEN cnt/2.0 AND cnt/2.0 + 1;`,
+    insight:'The BETWEEN cnt/2.0 AND cnt/2.0+1 trick selects the median row(s) for both odd and even counts. This is a well-known interview pattern worth memorising.' },
+
+  { id:'lc570', date:'2026-04-10', title:'Managers with at Least 5 Direct Reports (LC #570)', diff:'medium', topic:'aggregation', source:'LeetCode #570',
+    problem:'Find managers who have at least 5 direct reports. Employee table has id, name, department, managerId.',
+    sql:`SELECT name\nFROM Employee\nWHERE id IN (\n  SELECT managerId\n  FROM Employee\n  GROUP BY managerId\n  HAVING COUNT(*) >= 5\n);`,
+    insight:'Aggregate to find qualifying manager IDs, then look up their names in the outer query. Alternatively JOIN back to the same table.' },
+
+  { id:'lc577', date:'2026-04-10', title:'Employee Bonus (LC #577)', diff:'easy', topic:'joins', source:'LeetCode #577',
+    problem:'Report the name and bonus of each employee whose bonus is less than 1000 (or NULL).',
+    sql:`SELECT e.name, b.bonus\nFROM Employee e\nLEFT JOIN Bonus b ON e.empId = b.empId\nWHERE b.bonus < 1000 OR b.bonus IS NULL;`,
+    insight:'LEFT JOIN ensures employees without any bonus record are included. The IS NULL check is mandatory — employees with no bonus row should appear with NULL.' },
+
+  { id:'lc578', date:'2026-04-11', title:'Get Highest Answer Rate Question (LC #578)', diff:'medium', topic:'aggregation', source:'LeetCode #578',
+    problem:'Find the question with the highest answer rate (times answered / times shown). SurveyLog has uid, action, question_id, answer_id, q_num, timestamp.',
+    sql:`SELECT question_id AS survey_log\nFROM SurveyLog\nGROUP BY question_id\nORDER BY SUM(action='answer') / SUM(action='show') DESC\nLIMIT 1;`,
+    insight:'SUM of a boolean condition (action=\'answer\') counts matching rows inline — no CASE WHEN needed. Dividing two such sums gives the rate directly.' },
+
+  { id:'lc579', date:'2026-04-11', title:'Find Cumulative Salary of an Employee (LC #579)', diff:'hard', topic:'window', source:'LeetCode #579',
+    problem:'For each month, report each employee\'s cumulative salary over the 3-month period ending that month, excluding the most recent month.',
+    sql:`WITH monthly AS (\n  SELECT id, month, salary,\n    MAX(month) OVER (PARTITION BY id) AS max_month\n  FROM Employee\n)\nSELECT id, month,\n  SUM(salary) OVER (\n    PARTITION BY id ORDER BY month\n    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW\n  ) AS Salary\nFROM monthly\nWHERE month != max_month\nORDER BY id, month DESC;`,
+    insight:'Two window functions in sequence: one to identify the latest month (to exclude), another to compute the 3-month rolling sum. ROWS BETWEEN 2 PRECEDING AND CURRENT ROW is the 3-month window.' },
+
+  { id:'lc580', date:'2026-04-12', title:'Count Student Number in Departments (LC #580)', diff:'medium', topic:'joins', source:'LeetCode #580',
+    problem:'Report the number of students in each department, including departments with zero students, ordered by student count descending then dept name.',
+    sql:`SELECT d.dept_name, COUNT(s.student_id) AS student_number\nFROM Department d\nLEFT JOIN Student s ON d.dept_id = s.dept_id\nGROUP BY d.dept_id, d.dept_name\nORDER BY student_number DESC, d.dept_name;`,
+    insight:'LEFT JOIN from Department preserves departments with no students. COUNT(s.student_id) counts non-NULL student IDs, correctly returning 0 for empty departments.' },
+
+  { id:'lc584', date:'2026-04-12', title:'Find Customer Referee (LC #584)', diff:'easy', topic:'other', source:'LeetCode #584',
+    problem:'Find the names of customers not referred by customer with id = 2.',
+    sql:`SELECT name\nFROM Customer\nWHERE referee_id != 2 OR referee_id IS NULL;`,
+    insight:'NULL != 2 evaluates to UNKNOWN in SQL (not TRUE), so without the OR IS NULL clause, customers with no referee would be excluded. This NULL gotcha trips up many beginners.' },
+
+  { id:'lc585', date:'2026-04-13', title:'Investments in 2016 (LC #585)', diff:'medium', topic:'aggregation', source:'LeetCode #585',
+    problem:'Find the sum of tiv_2016 for policyholders who have the same tiv_2015 as at least one other policyholder and whose city/lat/lon is unique.',
+    sql:`SELECT ROUND(SUM(tiv_2016), 2) AS tiv_2016\nFROM Insurance\nWHERE tiv_2015 IN (\n  SELECT tiv_2015 FROM Insurance GROUP BY tiv_2015 HAVING COUNT(*) > 1\n)\nAND (lat, lon) IN (\n  SELECT lat, lon FROM Insurance GROUP BY lat, lon HAVING COUNT(*) = 1\n);`,
+    insight:'Two subquery filters combined with AND: one for shared tiv_2015 values, one for unique lat/lon pairs. Tuple subqueries make the lat/lon check concise.' },
+
+  { id:'lc586', date:'2026-04-13', title:'Customer Placing the Largest Number of Orders (LC #586)', diff:'easy', topic:'aggregation', source:'LeetCode #586',
+    problem:'Find the customer_number with the most orders.',
+    sql:`SELECT customer_number\nFROM Orders\nGROUP BY customer_number\nORDER BY COUNT(*) DESC\nLIMIT 1;`,
+    insight:'ORDER BY aggregate DESC + LIMIT 1 is the simplest top-N pattern. For ties you\'d need RANK/DENSE_RANK, but this problem guarantees one winner.' },
+
+  { id:'lc595', date:'2026-04-14', title:'Big Countries (LC #595)', diff:'easy', topic:'other', source:'LeetCode #595',
+    problem:'Find countries with area >= 3,000,000 or population >= 25,000,000.',
+    sql:`SELECT name, population, area\nFROM World\nWHERE area >= 3000000 OR population >= 25000000;`,
+    insight:'Pure WHERE clause with OR. Simple but tests that you understand OR includes both conditions — a country satisfying either qualifies.' },
+
+  { id:'lc596', date:'2026-04-14', title:'Classes More Than 5 Students (LC #596)', diff:'easy', topic:'aggregation', source:'LeetCode #596',
+    problem:'Find classes that have at least 5 students.',
+    sql:`SELECT class\nFROM Courses\nGROUP BY class\nHAVING COUNT(student) >= 5;`,
+    insight:'HAVING is the post-aggregation filter. A common mistake is putting this condition in WHERE (which runs before GROUP BY and cannot reference aggregates).' },
+
+  { id:'lc597', date:'2026-04-15', title:'Friend Requests I: Overall Acceptance Rate (LC #597)', diff:'easy', topic:'aggregation', source:'LeetCode #597',
+    problem:'Find the overall friend request acceptance rate (accepted / sent), rounded to 2 decimal places. Return 0 if no requests sent.',
+    sql:`SELECT ROUND(\n  IFNULL(\n    (SELECT COUNT(DISTINCT sender_id, send_to_id) FROM RequestAccepted) /\n    (SELECT COUNT(DISTINCT sender_id, send_to_id) FROM FriendRequest),\n  0), 2\n) AS accept_rate;`,
+    insight:'IFNULL handles the zero-requests edge case. COUNT DISTINCT on both columns together deduplicates multiple requests between the same pair.' },
+
+  { id:'lc601', date:'2026-04-15', title:'Human Traffic of Stadium (LC #601)', diff:'hard', topic:'cte', source:'LeetCode #601',
+    problem:'Find rows with at least 100 visitors that are part of 3 or more consecutive id rows (no gaps in id).',
+    sql:`WITH base AS (\n  SELECT *, id - ROW_NUMBER() OVER (ORDER BY id) AS grp\n  FROM Stadium\n  WHERE people >= 100\n)\nSELECT id, visit_date, people\nFROM base\nWHERE grp IN (\n  SELECT grp FROM base GROUP BY grp HAVING COUNT(*) >= 3\n)\nORDER BY visit_date;`,
+    insight:'The island-detection trick: id - ROW_NUMBER() is constant within consecutive groups. This is one of the most useful SQL patterns for "consecutive rows" problems.' },
+
+  { id:'lc602', date:'2026-04-16', title:'Friend Requests II: Who Has the Most Friends (LC #602)', diff:'medium', topic:'aggregation', source:'LeetCode #602',
+    problem:'Find who has the most friends (requests sent + requests accepted count both directions).',
+    sql:`SELECT id, COUNT(*) AS num\nFROM (\n  SELECT requester_id AS id FROM RequestAccepted\n  UNION ALL\n  SELECT accepter_id AS id FROM RequestAccepted\n) combined\nGROUP BY id\nORDER BY num DESC\nLIMIT 1;`,
+    insight:'UNION ALL (not UNION) is correct here — each accepted request should be counted for both people. UNION would deduplicate and undercount.' },
+
+  { id:'lc607', date:'2026-04-16', title:'Sales Person (LC #607)', diff:'easy', topic:'joins', source:'LeetCode #607',
+    problem:'Find salesperson names who have no order related to the company "RED".',
+    sql:`SELECT name\nFROM SalesPerson\nWHERE sales_id NOT IN (\n  SELECT o.sales_id\n  FROM Orders o\n  JOIN Company c ON o.com_id = c.com_id\n  WHERE c.name = 'RED'\n);`,
+    insight:'Get the set of sales_ids who sold to RED, then exclude them. NOT IN is safe here as long as the subquery returns no NULLs — always check nullability first.' },
+
+  { id:'lc608', date:'2026-04-17', title:'Tree Node (LC #608)', diff:'medium', topic:'other', source:'LeetCode #608',
+    problem:'Classify each node in a tree as Root, Leaf, or Inner.',
+    sql:`SELECT id,\n  CASE\n    WHEN p_id IS NULL THEN 'Root'\n    WHEN id IN (SELECT DISTINCT p_id FROM Tree WHERE p_id IS NOT NULL) THEN 'Inner'\n    ELSE 'Leaf'\n  END AS type\nFROM Tree;`,
+    insight:'CASE WHEN with a subquery inside is clean for classification. NULL p_id = Root; appears as a parent = Inner; neither = Leaf.' },
+
+  { id:'lc610', date:'2026-04-17', title:'Triangle Judgement (LC #610)', diff:'easy', topic:'other', source:'LeetCode #610',
+    problem:'For each row in Triangle, determine if x, y, z can form a valid triangle.',
+    sql:`SELECT x, y, z,\n  CASE WHEN x+y>z AND x+z>y AND y+z>x THEN 'Yes' ELSE 'No' END AS triangle\nFROM Triangle;`,
+    insight:'The triangle inequality requires all three pair-sums to exceed the third side. Pure CASE WHEN — no joins or aggregates needed.' },
+
+  { id:'lc612', date:'2026-04-18', title:'Shortest Distance in a Plane (LC #612)', diff:'medium', topic:'joins', source:'LeetCode #612',
+    problem:'Find the shortest distance between any two distinct points in the Point2D table.',
+    sql:`SELECT ROUND(MIN(SQRT(POW(p1.x-p2.x,2)+POW(p1.y-p2.y,2))),2) AS shortest\nFROM Point2D p1\nJOIN Point2D p2 ON p1.x != p2.x OR p1.y != p2.y;`,
+    insight:'Cross join with inequality filter pairs every distinct combination. SQRT + POW = Euclidean distance. MIN selects the closest pair.' },
+
+  { id:'lc613', date:'2026-04-18', title:'Shortest Distance in a Line (LC #613)', diff:'easy', topic:'joins', source:'LeetCode #613',
+    problem:'Find the minimum distance between any two points on a line.',
+    sql:`SELECT MIN(ABS(p1.x - p2.x)) AS shortest\nFROM Point p1\nJOIN Point p2 ON p1.x != p2.x;`,
+    insight:'For 1-D distance ABS subtraction suffices. Cross join on inequality gives all pairs; MIN finds the closest.' },
+
+  { id:'lc614', date:'2026-04-19', title:'Second Degree Follower (LC #614)', diff:'medium', topic:'aggregation', source:'LeetCode #614',
+    problem:'Find followers who are also followed by others, and count how many people follow them.',
+    sql:`SELECT follower, COUNT(DISTINCT followee) AS num\nFROM Follow\nWHERE follower IN (SELECT DISTINCT followee FROM Follow)\nGROUP BY follower\nORDER BY follower;`,
+    insight:'Filter follower to only those who appear as followees — those are second-degree followers. Then count their own followers.' },
+
+  { id:'lc615', date:'2026-04-19', title:'Average Salary: Departments vs Company (LC #615)', diff:'hard', topic:'window', source:'LeetCode #615',
+    problem:'Compare each department\'s average monthly salary to the company average for that month. Output "higher", "lower", or "same".',
+    sql:`WITH monthly AS (\n  SELECT DATE_FORMAT(pay_date,'%Y-%m') AS month,\n    department_id,\n    AVG(amount) AS dept_avg,\n    AVG(amount) OVER (PARTITION BY DATE_FORMAT(pay_date,'%Y-%m')) AS co_avg\n  FROM Salary JOIN Employee USING(employee_id)\n  GROUP BY month, department_id\n)\nSELECT month, department_id,\n  CASE WHEN dept_avg > co_avg THEN 'higher'\n       WHEN dept_avg < co_avg THEN 'lower'\n       ELSE 'same' END AS comparison\nFROM monthly;`,
+    insight:'A window AVG over the month (without partitioning by department) gives the company-wide average alongside the grouped department average in one pass.' },
+
+  { id:'lc618', date:'2026-04-20', title:'Students Report By Geography (LC #618)', diff:'hard', topic:'window', source:'LeetCode #618',
+    problem:'Pivot a student table to show America, Asia, Europe as columns. Uneven counts show NULL.',
+    sql:`WITH ranked AS (\n  SELECT name, continent,\n    ROW_NUMBER() OVER (PARTITION BY continent ORDER BY name) AS rn\n  FROM Student\n)\nSELECT\n  MAX(CASE WHEN continent='America' THEN name END) AS America,\n  MAX(CASE WHEN continent='Asia'    THEN name END) AS Asia,\n  MAX(CASE WHEN continent='Europe'  THEN name END) AS Europe\nFROM ranked\nGROUP BY rn;`,
+    insight:'Pivot via conditional aggregation: ROW_NUMBER per continent creates a common row index, then MAX(CASE WHEN) spreads continents into columns.' },
+
+  { id:'lc619', date:'2026-04-20', title:'Biggest Single Number (LC #619)', diff:'easy', topic:'subqueries', source:'LeetCode #619',
+    problem:'Find the largest number that appears only once. Return NULL if none.',
+    sql:`SELECT MAX(num) AS num\nFROM MyNumbers\nGROUP BY num\nHAVING COUNT(*) = 1;`,
+    insight:'GROUP BY + HAVING COUNT=1 isolates singles. MAX across those singles picks the largest. NULL is returned automatically if no rows qualify.' },
+
+  { id:'lc620', date:'2026-04-21', title:'Not Boring Movies (LC #620)', diff:'easy', topic:'other', source:'LeetCode #620',
+    problem:'Report movies with odd id and description not equal to "boring", ordered by rating descending.',
+    sql:`SELECT *\nFROM Cinema\nWHERE id % 2 = 1 AND description != 'boring'\nORDER BY rating DESC;`,
+    insight:'Modulo (%) tests odd/even. Straightforward filtering — great warm-up query to confirm basic WHERE + ORDER BY syntax.' },
+
+  { id:'lc626', date:'2026-04-21', title:'Exchange Seats (LC #626)', diff:'medium', topic:'window', source:'LeetCode #626',
+    problem:'Swap seat ids of every two consecutive students. If count is odd the last student keeps their seat.',
+    sql:`SELECT\n  CASE\n    WHEN id % 2 = 1 AND id = (SELECT COUNT(*) FROM Seat) THEN id\n    WHEN id % 2 = 1 THEN id + 1\n    ELSE id - 1\n  END AS id,\n  student\nFROM Seat\nORDER BY id;`,
+    insight:'Three cases: last odd-row stays, other odd rows go up one, even rows go down one. The subquery for max id handles the edge case of an odd total.' },
+
+  { id:'lc627', date:'2026-04-22', title:'Swap Salary (LC #627)', diff:'easy', topic:'other', source:'LeetCode #627',
+    problem:'Swap all m and f values in the sex column of the Salary table in a single update statement without a temp table.',
+    sql:`UPDATE Salary\nSET sex = CASE WHEN sex = 'm' THEN 'f' ELSE 'm' END;`,
+    insight:'CASE inside UPDATE is the standard toggle pattern. ELF is not needed — ELSE catches the other value cleanly.' },
+
+  { id:'lc1045', date:'2026-04-22', title:'Customers Who Bought All Products (LC #1045)', diff:'medium', topic:'aggregation', source:'LeetCode #1045',
+    problem:'Find customers who bought every product in the Product table.',
+    sql:`SELECT customer_id\nFROM Customer\nGROUP BY customer_id\nHAVING COUNT(DISTINCT product_key) = (SELECT COUNT(*) FROM Product);`,
+    insight:'Relational division via COUNT(DISTINCT) = total products. Any customer missing even one product will have a lower count and be excluded.' },
+
+  { id:'lc1050', date:'2026-04-23', title:'Actors and Directors Who Cooperated At Least Three Times (LC #1050)', diff:'easy', topic:'aggregation', source:'LeetCode #1050',
+    problem:'Find actor_id and director_id pairs that have cooperated at least 3 times.',
+    sql:`SELECT actor_id, director_id\nFROM ActorDirector\nGROUP BY actor_id, director_id\nHAVING COUNT(*) >= 3;`,
+    insight:'Group by pair, filter by count. Simple aggregation — be precise about grouping on both columns.' },
+
+  { id:'lc1068', date:'2026-04-23', title:'Product Sales Analysis I (LC #1068)', diff:'easy', topic:'joins', source:'LeetCode #1068',
+    problem:'Report the product name, year, and price for every sale.',
+    sql:`SELECT p.product_name, s.year, s.price\nFROM Sales s\nJOIN Product p ON s.product_id = p.product_id;`,
+    insight:'Simple inner join. Understand which table is the "fact" (Sales) and which is the "dimension" (Product) — a pattern you\'ll see in every analytics schema.' },
+
+  { id:'lc1069', date:'2026-04-24', title:'Product Sales Analysis II (LC #1069)', diff:'easy', topic:'aggregation', source:'LeetCode #1069',
+    problem:'Report total quantity sold for each product.',
+    sql:`SELECT product_id, SUM(quantity) AS total_quantity\nFROM Sales\nGROUP BY product_id;`,
+    insight:'SUM + GROUP BY. The building block of almost every sales report.' },
+
+  { id:'lc1070', date:'2026-04-24', title:'Product Sales Analysis III (LC #1070)', diff:'medium', topic:'window', source:'LeetCode #1070',
+    problem:'Select the first year each product was sold, along with quantity and price.',
+    sql:`SELECT product_id, year AS first_year, quantity, price\nFROM Sales\nWHERE (product_id, year) IN (\n  SELECT product_id, MIN(year)\n  FROM Sales\n  GROUP BY product_id\n);`,
+    insight:'Tuple-in-subquery to match the first year per product. An alternative is ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY year) = 1.' },
+
+  { id:'lc1075', date:'2026-04-25', title:'Project Employees I (LC #1075)', diff:'easy', topic:'joins', source:'LeetCode #1075',
+    problem:'Report the average experience years of employees for each project, rounded to 2 decimal places.',
+    sql:`SELECT p.project_id,\n  ROUND(AVG(e.experience_years), 2) AS average_years\nFROM Project p\nJOIN Employee e ON p.employee_id = e.employee_id\nGROUP BY p.project_id;`,
+    insight:'JOIN then GROUP BY project to aggregate employee experience. ROUND(AVG(...), 2) is the standard way to format averages.' },
+
+  { id:'lc1076', date:'2026-04-25', title:'Project Employees II (LC #1076)', diff:'easy', topic:'aggregation', source:'LeetCode #1076',
+    problem:'Report the project with the most employees. Return all projects if tied.',
+    sql:`SELECT project_id\nFROM Project\nGROUP BY project_id\nHAVING COUNT(employee_id) = (\n  SELECT MAX(cnt) FROM (\n    SELECT COUNT(employee_id) AS cnt\n    FROM Project GROUP BY project_id\n  ) t\n);`,
+    insight:'Find the maximum count in a subquery, then filter groups matching that count. This handles ties — LIMIT 1 would not.' },
+
+  { id:'lc1077', date:'2026-04-26', title:'Project Employees III (LC #1077)', diff:'medium', topic:'window', source:'LeetCode #1077',
+    problem:'Report the most experienced employee for each project. Return all if tied.',
+    sql:`SELECT project_id, employee_id\nFROM (\n  SELECT p.project_id, p.employee_id,\n    RANK() OVER (PARTITION BY p.project_id ORDER BY e.experience_years DESC) AS rnk\n  FROM Project p JOIN Employee e ON p.employee_id = e.employee_id\n) t\nWHERE rnk = 1;`,
+    insight:'RANK() over partition gives rank 1 to all top-tied employees. Using ROW_NUMBER() would arbitrarily pick one winner and miss ties.' },
+
+  { id:'lc1082', date:'2026-04-26', title:'Sales Analysis I (LC #1082)', diff:'easy', topic:'aggregation', source:'LeetCode #1082',
+    problem:'Find sellers with the highest total sale price.',
+    sql:`SELECT seller_id\nFROM Sales\nGROUP BY seller_id\nHAVING SUM(price) = (\n  SELECT MAX(total) FROM (\n    SELECT SUM(price) AS total FROM Sales GROUP BY seller_id\n  ) t\n);`,
+    insight:'Same max-group pattern as LC 1076. Aggregate once to get totals, find the max in a subquery, filter matching groups.' },
+
+  { id:'lc1083', date:'2026-04-27', title:'Sales Analysis II (LC #1083)', diff:'easy', topic:'joins', source:'LeetCode #1083',
+    problem:'Find buyers who bought S8 but not iPhone.',
+    sql:`SELECT DISTINCT buyer_id\nFROM Sales s\nJOIN Product p ON s.product_id = p.product_id\nWHERE p.product_name = 'S8'\nAND buyer_id NOT IN (\n  SELECT buyer_id FROM Sales s2\n  JOIN Product p2 ON s2.product_id = p2.product_id\n  WHERE p2.product_name = 'iPhone'\n);`,
+    insight:'Set difference: get buyers of S8, subtract buyers of iPhone. The NOT IN subquery must be checked for NULLs; here buyer_id is non-nullable so it\'s safe.' },
+
+  { id:'lc1084', date:'2026-04-27', title:'Sales Analysis III (LC #1084)', diff:'easy', topic:'aggregation', source:'LeetCode #1084',
+    problem:'Report products sold only in spring 2019 (between 2019-01-01 and 2019-03-31).',
+    sql:`SELECT s.product_id, p.product_name\nFROM Sales s\nJOIN Product p ON s.product_id = p.product_id\nGROUP BY s.product_id, p.product_name\nHAVING MIN(s.sale_date) >= '2019-01-01'\n   AND MAX(s.sale_date) <= '2019-03-31';`,
+    insight:'MIN and MAX sale dates bracket the entire history for each product. If both fall within the spring window, all sales were in that window — elegant and avoids row-level filtering.' },
+
+  { id:'lc1097', date:'2026-04-28', title:'Game Play Analysis V (LC #1097)', diff:'hard', topic:'window', source:'LeetCode #1097',
+    problem:'For each install date, find the number of players that installed and the fraction who returned the next day.',
+    sql:`WITH first_day AS (\n  SELECT player_id, MIN(event_date) AS install_dt\n  FROM Activity GROUP BY player_id\n),\nnext_day AS (\n  SELECT f.install_dt, COUNT(DISTINCT a.player_id) AS retained\n  FROM first_day f\n  LEFT JOIN Activity a\n    ON f.player_id = a.player_id\n    AND a.event_date = DATE_ADD(f.install_dt, INTERVAL 1 DAY)\n  GROUP BY f.install_dt\n)\nSELECT f.install_dt,\n  COUNT(f.player_id) AS installs,\n  ROUND(COALESCE(n.retained,0)/COUNT(f.player_id),2) AS Day1_retention\nFROM first_day f\nLEFT JOIN next_day n ON f.install_dt = n.install_dt\nGROUP BY f.install_dt;`,
+    insight:'Classic day-1 retention: find install dates, left-join to next-day activity, compute fraction. COALESCE handles days with zero retention.' },
+
+  { id:'lc1098', date:'2026-04-28', title:'Unpopular Books (LC #1098)', diff:'medium', topic:'joins', source:'LeetCode #1098',
+    problem:'Find books with fewer than 10 orders in the last year, excluding books available for less than a month.',
+    sql:`SELECT b.book_id, b.name\nFROM Books b\nLEFT JOIN Orders o\n  ON b.book_id = o.book_id\n  AND o.dispatch_date >= '2018-06-23'\nWHERE b.available_from <= '2018-05-23'\nGROUP BY b.book_id, b.name\nHAVING COALESCE(SUM(o.quantity), 0) < 10;`,
+    insight:'Filter on the JOIN condition limits orders to the last year but keeps all books (LEFT JOIN). COALESCE(SUM,0) treats no-orders as zero.' },
+
+  { id:'lc1107', date:'2026-04-29', title:'New Users Daily Count (LC #1107)', diff:'medium', topic:'aggregation', source:'LeetCode #1107',
+    problem:'Report for each day the number of users who logged in for the first time in the 90-day window ending 2019-06-30.',
+    sql:`SELECT DATE_FORMAT(MIN(activity_date),'%Y-%m-%d') AS login_date,\n  COUNT(user_id) AS user_count\nFROM Traffic\nWHERE activity = 'login'\nGROUP BY user_id\nHAVING MIN(activity_date) >= DATE_SUB('2019-06-30', INTERVAL 90 DAY)\nGROUP BY login_date;`,
+    insight:'MIN(activity_date) per user gives their first login. HAVING filters to those whose first login is within the 90-day window.' },
+
+  { id:'lc1112', date:'2026-04-29', title:'Highest Grade For Each Student (LC #1112)', diff:'medium', topic:'window', source:'LeetCode #1112',
+    problem:'Find each student\'s highest grade and the lowest course_id with that grade.',
+    sql:`WITH ranked AS (\n  SELECT student_id, course_id, grade,\n    RANK() OVER (PARTITION BY student_id ORDER BY grade DESC, course_id) AS rnk\n  FROM Enrollments\n)\nSELECT student_id, course_id, grade\nFROM ranked\nWHERE rnk = 1\nORDER BY student_id;`,
+    insight:'Multi-column ORDER BY in the window: grade DESC for highest, then course_id ASC for tie-breaking on lowest course. RANK=1 picks the winner per student.' },
+
+  { id:'lc1113', date:'2026-04-30', title:'Reported Posts (LC #1113)', diff:'easy', topic:'aggregation', source:'LeetCode #1113',
+    problem:'Find the number of posts reported yesterday for each report reason.',
+    sql:`SELECT extra AS report_reason,\n  COUNT(DISTINCT post_id) AS report_count\nFROM Actions\nWHERE action_date = DATE_SUB('2019-07-05', INTERVAL 1 DAY)\n  AND action = 'report'\nGROUP BY extra;`,
+    insight:'COUNT DISTINCT post_id avoids double-counting posts reported multiple times by different users. Filter to yesterday\'s date before grouping.' },
+
+  { id:'lc1126', date:'2026-04-30', title:'Active Businesses (LC #1126)', diff:'medium', topic:'window', source:'LeetCode #1126',
+    problem:'Find businesses with more than one event type occurring more than the average for that event type.',
+    sql:`WITH avg_occ AS (\n  SELECT event_type, AVG(occurrences) AS avg_occ\n  FROM Events GROUP BY event_type\n)\nSELECT business_id\nFROM Events e\nJOIN avg_occ a ON e.event_type = a.event_type\nWHERE e.occurrences > a.avg_occ\nGROUP BY business_id\nHAVING COUNT(*) > 1;`,
+    insight:'CTE computes per-event-type averages. Join back, filter above-average rows, then count distinct event types per business.' },
+
+  { id:'lc1127', date:'2026-05-01', title:'User Purchase Platform (LC #1127)', diff:'hard', topic:'other', source:'LeetCode #1127',
+    problem:'Report total spending per platform (mobile/desktop/both) per day.',
+    sql:`WITH spend AS (\n  SELECT user_id, spend_date,\n    SUM(amount) AS amount,\n    COUNT(DISTINCT platform) AS plat_count\n  FROM Spending GROUP BY user_id, spend_date\n)\nSELECT s.spend_date, 'desktop' AS platform,\n  SUM(CASE WHEN plat_count=1 AND EXISTS(\n    SELECT 1 FROM Spending WHERE user_id=s.user_id AND spend_date=s.spend_date AND platform='desktop'\n  ) THEN amount ELSE 0 END) AS total_amount,\n  COUNT(CASE WHEN plat_count=1 AND EXISTS(\n    SELECT 1 FROM Spending WHERE user_id=s.user_id AND spend_date=s.spend_date AND platform='desktop'\n  ) THEN 1 END) AS total_users\nFROM spend s GROUP BY spend_date\nUNION ALL ...`,
+    insight:'One of the trickiest LeetCode SQL problems. Users spending on both platforms are categorised "both". You need to detect single-platform vs dual-platform spenders separately.' },
+
+  { id:'lc1132', date:'2026-05-01', title:'Reported Posts II (LC #1132)', diff:'medium', topic:'aggregation', source:'LeetCode #1132',
+    problem:'Find the daily average percentage of posts removed after being reported as spam, rounded to 2 decimal places.',
+    sql:`SELECT ROUND(AVG(removed_rate)*100, 2) AS average_daily_percent\nFROM (\n  SELECT a.action_date,\n    COUNT(DISTINCT r.post_id)/COUNT(DISTINCT a.post_id) AS removed_rate\n  FROM Actions a\n  LEFT JOIN Removals r ON a.post_id = r.post_id\n  WHERE a.extra = 'spam'\n  GROUP BY a.action_date\n) daily;`,
+    insight:'Compute the daily rate first (in a subquery), then average those daily rates. Averaging percentages vs averaging counts gives different results — here we want the daily-rate average.' },
+
+  { id:'lc1141', date:'2026-05-01', title:'User Activity for the Past 30 Days I (LC #1141)', diff:'easy', topic:'aggregation', source:'LeetCode #1141',
+    problem:'Find daily active users for the 30-day period ending 2019-07-27.',
+    sql:`SELECT activity_date AS day, COUNT(DISTINCT user_id) AS active_users\nFROM Activity\nWHERE activity_date BETWEEN DATE_SUB('2019-07-27', INTERVAL 29 DAY) AND '2019-07-27'\nGROUP BY activity_date;`,
+    insight:'BETWEEN inclusive on both ends. Subtract 29 days (not 30) to get a 30-day window including the end date. COUNT DISTINCT user_id to count unique users per day.' },
+
+  { id:'lc1142', date:'2026-05-02', title:'User Activity for the Past 30 Days II (LC #1142)', diff:'easy', topic:'aggregation', source:'LeetCode #1142',
+    problem:'Find the average number of sessions per user in the 30-day period ending 2019-07-27, rounded to 2 decimal places.',
+    sql:`SELECT ROUND(COUNT(DISTINCT session_id)/COUNT(DISTINCT user_id), 2) AS average_sessions_per_user\nFROM Activity\nWHERE activity_date BETWEEN DATE_SUB('2019-07-27', INTERVAL 29 DAY) AND '2019-07-27';`,
+    insight:'Dividing COUNT DISTINCT sessions by COUNT DISTINCT users gives average sessions per user. No GROUP BY needed — this is a single aggregate across all users.' },
+
+  { id:'lc1148', date:'2026-05-02', title:'Article Views I (LC #1148)', diff:'easy', topic:'other', source:'LeetCode #1148',
+    problem:'Find all authors who viewed at least one of their own articles.',
+    sql:`SELECT DISTINCT author_id AS id\nFROM Views\nWHERE author_id = viewer_id\nORDER BY id;`,
+    insight:'Self-view is simply WHERE author_id = viewer_id. DISTINCT because an author may have viewed their own articles multiple times.' },
+
+  { id:'lc1149', date:'2026-05-03', title:'Article Views II (LC #1149)', diff:'medium', topic:'aggregation', source:'LeetCode #1149',
+    problem:'Find all users who viewed more than one article on the same day.',
+    sql:`SELECT DISTINCT viewer_id AS id\nFROM Views\nGROUP BY viewer_id, view_date\nHAVING COUNT(DISTINCT article_id) > 1\nORDER BY id;`,
+    insight:'GROUP BY viewer + date, then HAVING count of distinct articles > 1. DISTINCT on viewer_id at the outer level handles users who did this on multiple days.' },
+
+  { id:'lc1158', date:'2026-05-03', title:'Market Analysis I (LC #1158)', diff:'medium', topic:'joins', source:'LeetCode #1158',
+    problem:'Report each user\'s join date and how many orders they placed in 2019.',
+    sql:`SELECT u.user_id AS buyer_id, u.join_date,\n  COUNT(o.order_id) AS orders_in_2019\nFROM Users u\nLEFT JOIN Orders o\n  ON u.user_id = o.buyer_id\n  AND YEAR(o.order_date) = 2019\nGROUP BY u.user_id, u.join_date;`,
+    insight:'Filter the year in the JOIN condition, not WHERE, so that users with no 2019 orders still appear (LEFT JOIN + WHERE would eliminate them).' },
+
+  { id:'lc1159', date:'2026-05-04', title:'Market Analysis II (LC #1159)', diff:'hard', topic:'window', source:'LeetCode #1159',
+    problem:'Find sellers whose second sale was for an item they were the brand owner of.',
+    sql:`WITH ranked AS (\n  SELECT o.seller_id, o.item_id,\n    RANK() OVER (PARTITION BY o.seller_id ORDER BY o.order_date, o.order_id) AS rnk\n  FROM Orders o\n)\nSELECT u.user_id AS seller_id,\n  CASE WHEN i.seller_id = r.seller_id THEN 'yes' ELSE 'no' END AS 2nd_item_fav_brand\nFROM Users u\nLEFT JOIN ranked r ON u.user_id = r.seller_id AND r.rnk = 2\nLEFT JOIN Items i ON r.item_id = i.item_id AND i.favorite_brand = u.favorite_brand\n;`,
+    insight:'Two LEFT JOINs: first to get the 2nd order per seller, second to check brand ownership. Sellers with fewer than 2 orders get "no" due to NULL propagation.' },
+
+  { id:'lc1164', date:'2026-05-04', title:'Product Price at a Given Date (LC #1164)', diff:'medium', topic:'window', source:'LeetCode #1164',
+    problem:'Find the price of each product on 2019-08-16. Default price is 10 if no change was made before that date.',
+    sql:`SELECT product_id,\n  COALESCE(\n    (SELECT new_price FROM Products\n     WHERE product_id = p.product_id AND change_date <= '2019-08-16'\n     ORDER BY change_date DESC LIMIT 1),\n  10) AS price\nFROM (SELECT DISTINCT product_id FROM Products) p;`,
+    insight:'Correlated subquery finds the latest price change on or before the target date. COALESCE with 10 handles products with no prior change — the default price.' },
+
+  { id:'lc1174', date:'2026-05-05', title:'Immediate Food Delivery II (LC #1174)', diff:'medium', topic:'window', source:'LeetCode #1174',
+    problem:'Find the percentage of immediate orders among first orders of all customers, rounded to 2 decimal places.',
+    sql:`WITH first_orders AS (\n  SELECT customer_id, MIN(order_date) AS first_date\n  FROM Delivery GROUP BY customer_id\n)\nSELECT ROUND(\n  100 * AVG(d.order_date = d.customer_pref_delivery_date), 2\n) AS immediate_percentage\nFROM Delivery d\nJOIN first_orders f ON d.customer_id = f.customer_id AND d.order_date = f.first_date;`,
+    insight:'AVG of a boolean (order_date = pref_delivery_date) gives the fraction directly, then multiply by 100. Join to first_orders to filter only first orders.' },
+
+  { id:'lc1193', date:'2026-05-05', title:'Monthly Transactions I (LC #1193)', diff:'medium', topic:'aggregation', source:'LeetCode #1193',
+    problem:'For each month and country, report transaction count, approved count, total amount, and total approved amount.',
+    sql:`SELECT DATE_FORMAT(trans_date,'%Y-%m') AS month, country,\n  COUNT(*) AS trans_count,\n  SUM(state='approved') AS approved_count,\n  SUM(amount) AS trans_total_amount,\n  SUM(CASE WHEN state='approved' THEN amount ELSE 0 END) AS approved_total_amount\nFROM Transactions\nGROUP BY month, country;`,
+    insight:'Conditional SUM via CASE WHEN for approved amounts; SUM of boolean for approved count. Both avoid needing separate subqueries.' },
+
+  { id:'lc1194', date:'2026-05-06', title:'Tournament Winners (LC #1194)', diff:'hard', topic:'aggregation', source:'LeetCode #1194',
+    problem:'Find the winner in each group — the player with the highest total score. Ties broken by lowest player_id.',
+    sql:`WITH scores AS (\n  SELECT first_player AS player_id, first_score AS score FROM Matches\n  UNION ALL\n  SELECT second_player, second_score FROM Matches\n),\ntotals AS (\n  SELECT player_id, SUM(score) AS total FROM scores GROUP BY player_id\n),\nranked AS (\n  SELECT p.group_id, t.player_id, t.total,\n    RANK() OVER (PARTITION BY p.group_id ORDER BY t.total DESC, t.player_id) AS rnk\n  FROM totals t JOIN Players p ON t.player_id = p.player_id\n)\nSELECT group_id, player_id FROM ranked WHERE rnk = 1;`,
+    insight:'UNION ALL combines scores from both columns. Then total per player, join to group, rank within group by score DESC then player_id for tie-break.' },
+
+  { id:'lc1204', date:'2026-05-06', title:'Last Person to Fit in the Bus (LC #1204)', diff:'medium', topic:'window', source:'LeetCode #1204',
+    problem:'Find the last person who can board a bus with a 1000kg weight limit (board in turn order).',
+    sql:`WITH running AS (\n  SELECT person_name, weight,\n    SUM(weight) OVER (ORDER BY turn) AS cum_weight\n  FROM Queue\n)\nSELECT person_name\nFROM running\nWHERE cum_weight <= 1000\nORDER BY cum_weight DESC\nLIMIT 1;`,
+    insight:'Running sum with SUM() OVER ORDER BY turn. Filter to rows where cumulative weight ≤ 1000, then pick the largest — that\'s the last person who fits.' },
+
+  { id:'lc1205', date:'2026-05-07', title:'Monthly Transactions II (LC #1205)', diff:'medium', topic:'aggregation', source:'LeetCode #1205',
+    problem:'Find approved transactions and chargebacks per month and country.',
+    sql:`SELECT month, country, approved_count, approved_amount, chargeback_count, chargeback_amount\nFROM (\n  SELECT DATE_FORMAT(t.trans_date,'%Y-%m') AS month, t.country,\n    COUNT(*) AS approved_count, SUM(t.amount) AS approved_amount,\n    0 AS chargeback_count, 0 AS chargeback_amount\n  FROM Transactions t WHERE t.state='approved' GROUP BY month, t.country\n  UNION ALL\n  SELECT DATE_FORMAT(c.trans_date,'%Y-%m'), t.country,\n    0, 0, COUNT(*), SUM(t.amount)\n  FROM Chargebacks c JOIN Transactions t ON c.trans_id = t.id\n  GROUP BY month, t.country\n) combined\nGROUP BY month, country;`,
+    insight:'UNION ALL two aggregates (one for approvals, one for chargebacks), then outer GROUP BY sums them per month/country. This avoids a complex pivot.' },
+
+  { id:'lc1211', date:'2026-05-07', title:'Queries Quality and Percentage (LC #1211)', diff:'easy', topic:'aggregation', source:'LeetCode #1211',
+    problem:'Report quality (avg rating/position) and poor_query_percentage (rating < 3 fraction × 100) for each query name.',
+    sql:`SELECT query_name,\n  ROUND(AVG(rating/position), 2) AS quality,\n  ROUND(100 * AVG(rating < 3), 2) AS poor_query_percentage\nFROM Queries\nGROUP BY query_name;`,
+    insight:'AVG(rating/position) for quality; AVG of boolean (rating < 3) × 100 for percentage. Both inline and compact.' },
+
+  { id:'lc1212', date:'2026-05-08', title:'Team Scores in Football Tournament (LC #1212)', diff:'medium', topic:'joins', source:'LeetCode #1212',
+    problem:'Report total points for each team (win=3, draw=1, loss=0), ordered by points descending.',
+    sql:`SELECT t.team_id, t.team_name,\n  SUM(\n    CASE WHEN m.host_team=t.team_id AND m.host_goals>m.guest_goals THEN 3\n         WHEN m.guest_team=t.team_id AND m.guest_goals>m.host_goals THEN 3\n         WHEN m.host_goals=m.guest_goals THEN 1 ELSE 0 END\n  ) AS num_points\nFROM Teams t\nLEFT JOIN Matches m ON t.team_id IN (m.host_team, m.guest_team)\nGROUP BY t.team_id, t.team_name\nORDER BY num_points DESC, t.team_id;`,
+    insight:'JOIN where team appears as either host or guest, then CASE WHEN determines points from the team\'s perspective. LEFT JOIN preserves teams with no matches.' },
+
+  { id:'lc1225', date:'2026-05-08', title:'Report Contiguous Dates (LC #1225)', diff:'hard', topic:'cte', source:'LeetCode #1225',
+    problem:'Report the contiguous periods of success and failure states from 2019, with their start and end dates.',
+    sql:`WITH all_days AS (\n  SELECT fail_date AS dt, 'failed' AS state FROM Failed\n  WHERE YEAR(fail_date)=2019\n  UNION ALL\n  SELECT success_date, 'succeeded' FROM Succeeded\n  WHERE YEAR(success_date)=2019\n),\nislands AS (\n  SELECT dt, state,\n    dt - INTERVAL ROW_NUMBER() OVER (PARTITION BY state ORDER BY dt) DAY AS grp\n  FROM all_days\n)\nSELECT state AS period_state, MIN(dt) AS start_date, MAX(dt) AS end_date\nFROM islands\nGROUP BY state, grp\nORDER BY start_date;`,
+    insight:'Classic island detection: subtract ROW_NUMBER from the date to get a constant group key for consecutive same-state days.' },
+
+  { id:'lc1241', date:'2026-05-09', title:'Number of Comments per Post (LC #1241)', diff:'easy', topic:'aggregation', source:'LeetCode #1241',
+    problem:'Find the number of unique comments for each root post (parent_id IS NULL), including posts with zero comments.',
+    sql:`SELECT p.sub_id AS post_id,\n  COUNT(DISTINCT c.sub_id) AS number_of_comments\nFROM Submissions p\nLEFT JOIN Submissions c ON c.parent_id = p.sub_id\nWHERE p.parent_id IS NULL\nGROUP BY p.sub_id;`,
+    insight:'Self-join: posts are rows with NULL parent_id, comments are rows with the post\'s id as parent_id. COUNT DISTINCT sub_id handles duplicate comment rows.' },
+
+  { id:'lc1251', date:'2026-05-09', title:'Average Selling Price (LC #1251)', diff:'easy', topic:'joins', source:'LeetCode #1251',
+    problem:'Find the average selling price for each product (total revenue / total units sold), rounded to 2 decimal places.',
+    sql:`SELECT p.product_id,\n  ROUND(SUM(p.price * u.units) / SUM(u.units), 2) AS average_price\nFROM Prices p\nJOIN UnitsSold u\n  ON p.product_id = u.product_id\n  AND u.purchase_date BETWEEN p.start_date AND p.end_date\nGROUP BY p.product_id;`,
+    insight:'Join on product_id AND date range to pick the correct price tier. Weighted average = SUM(price×units)/SUM(units) — not AVG(price).' },
+
+  { id:'lc1264', date:'2026-05-10', title:'Page Recommendations (LC #1264)', diff:'medium', topic:'joins', source:'LeetCode #1264',
+    problem:'Recommend pages liked by friends of user_id=1 that user 1 hasn\'t liked.',
+    sql:`SELECT DISTINCT page_id AS recommended_page\nFROM Likes\nWHERE user_id IN (\n  SELECT user2_id FROM Friendship WHERE user1_id=1\n  UNION\n  SELECT user1_id FROM Friendship WHERE user2_id=1\n)\nAND page_id NOT IN (SELECT page_id FROM Likes WHERE user_id=1);`,
+    insight:'Friendships are stored as pairs — UNION both directions to get all friends. Then filter liked pages to those not already liked by user 1.' },
+
+  { id:'lc1270', date:'2026-05-10', title:'All People Report to the Given Manager (LC #1270)', diff:'medium', topic:'joins', source:'LeetCode #1270',
+    problem:'Find all employees who report directly or indirectly to manager_id=1 (up to 3 levels deep), excluding the manager himself.',
+    sql:`SELECT e1.employee_id\nFROM Employees e1\nJOIN Employees e2 ON e1.manager_id = e2.employee_id\nJOIN Employees e3 ON e2.manager_id = e3.employee_id\nWHERE e3.manager_id = 1 AND e1.employee_id != 1;`,
+    insight:'Three-level self-join chains each employee to their manager\'s manager\'s manager. For arbitrary depth you\'d need a recursive CTE.' },
+
+  { id:'lc1280', date:'2026-05-11', title:'Students and Examinations (LC #1280)', diff:'easy', topic:'joins', source:'LeetCode #1280',
+    problem:'Find how many times each student attended each exam (including zero times).',
+    sql:`SELECT s.student_id, s.student_name, sub.subject_name,\n  COUNT(e.subject_name) AS attended_exams\nFROM Students s\nCROSS JOIN Subjects sub\nLEFT JOIN Examinations e\n  ON s.student_id = e.student_id AND sub.subject_name = e.subject_name\nGROUP BY s.student_id, s.student_name, sub.subject_name\nORDER BY s.student_id, sub.subject_name;`,
+    insight:'CROSS JOIN creates every student-subject combination first. LEFT JOIN then matches actual exam records — COUNT of a nullable column gives zero when no records match.' },
+
+  { id:'lc1285', date:'2026-05-11', title:'Find the Start and End Number of Continuous Ranges (LC #1285)', diff:'medium', topic:'window', source:'LeetCode #1285',
+    problem:'Find the start and end of each contiguous range in the Logs table.',
+    sql:`WITH grp AS (\n  SELECT log_id,\n    log_id - ROW_NUMBER() OVER (ORDER BY log_id) AS island\n  FROM Logs\n)\nSELECT MIN(log_id) AS start_id, MAX(log_id) AS end_id\nFROM grp\nGROUP BY island\nORDER BY start_id;`,
+    insight:'The island-detection classic again: log_id minus its row number is constant within consecutive gaps. Group by that constant to get each island.' },
+
+  { id:'lc1294', date:'2026-05-12', title:'Weather Type in Each Country (LC #1294)', diff:'easy', topic:'joins', source:'LeetCode #1294',
+    problem:'Find the weather type (Cold/Warm/Hot) for each country in November 2019 based on average weather state.',
+    sql:`SELECT c.country_name,\n  CASE WHEN AVG(w.weather_state) <= 15 THEN 'Cold'\n       WHEN AVG(w.weather_state) >= 25 THEN 'Hot'\n       ELSE 'Warm' END AS weather_type\nFROM Countries c\nJOIN Weather w ON c.country_id = w.country_id\nWHERE w.day BETWEEN '2019-11-01' AND '2019-11-30'\nGROUP BY c.country_id, c.country_name;`,
+    insight:'CASE WHEN on an aggregate (AVG) is evaluated after GROUP BY. Classify the grouped average — not individual rows.' },
+
+  { id:'lc1303', date:'2026-05-12', title:'Find the Team Size (LC #1303)', diff:'easy', topic:'window', source:'LeetCode #1303',
+    problem:'Report team size for each employee.',
+    sql:`SELECT employee_id,\n  COUNT(*) OVER (PARTITION BY team_id) AS team_size\nFROM Employee;`,
+    insight:'Window COUNT without ORDER BY gives the total group size alongside each row — no GROUP BY needed, so all rows are preserved.' },
+
+  { id:'lc1321', date:'2026-05-13', title:'Restaurant Growth (LC #1321)', diff:'medium', topic:'window', source:'LeetCode #1321',
+    problem:'Compute the 7-day moving average of daily customer spending (most recent 7 days inclusive), starting from the 7th day.',
+    sql:`WITH daily AS (\n  SELECT visited_on, SUM(amount) AS day_total\n  FROM Customer GROUP BY visited_on\n)\nSELECT visited_on,\n  SUM(day_total) OVER (ORDER BY visited_on ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS amount,\n  ROUND(AVG(day_total) OVER (ORDER BY visited_on ROWS BETWEEN 6 PRECEDING AND CURRENT ROW), 2) AS average_amount\nFROM daily\nORDER BY visited_on\nLIMIT 999 OFFSET 6;`,
+    insight:'ROWS BETWEEN 6 PRECEDING AND CURRENT ROW = 7-day window. Aggregate daily first to avoid double-counting multiple customers on the same day. OFFSET 6 skips the first 6 incomplete windows.' },
+
+  { id:'lc1322', date:'2026-05-13', title:'Ads Performance (LC #1322)', diff:'easy', topic:'aggregation', source:'LeetCode #1322',
+    problem:'Find the CTR (click-through rate) for each ad: clicks/(clicks+views)*100, rounded to 2 decimals. Ignore "Ignored" actions.',
+    sql:`SELECT ad_id,\n  ROUND(100 * SUM(action='Clicked') /\n    NULLIF(SUM(action IN ('Clicked','Viewed')), 0), 2) AS ctr\nFROM Ads\nGROUP BY ad_id\nORDER BY ctr DESC, ad_id;`,
+    insight:'NULLIF prevents division by zero when an ad has only "Ignored" actions. SUM of boolean conditions counts efficiently.' },
+
+  { id:'lc1327', date:'2026-05-14', title:'List the Products Ordered in a Period (LC #1327)', diff:'easy', topic:'joins', source:'LeetCode #1327',
+    problem:'Find products with at least 100 units ordered in February 2020.',
+    sql:`SELECT p.product_name, SUM(o.unit) AS unit\nFROM Products p\nJOIN Orders o ON p.product_id = o.product_id\nWHERE o.order_date BETWEEN '2020-02-01' AND '2020-02-29'\nGROUP BY p.product_id, p.product_name\nHAVING SUM(o.unit) >= 100;`,
+    insight:'Filter date range in WHERE, group and sum units, then HAVING filters the minimum threshold. Note 2020 was a leap year — February has 29 days.' },
+
+  { id:'lc1336', date:'2026-05-14', title:'Number of Transactions per Visit (LC #1336)', diff:'hard', topic:'cte', source:'LeetCode #1336',
+    problem:'Find how many users visited with exactly 0, 1, 2, ... transactions, for all transaction counts that appear.',
+    sql:`WITH visits AS (\n  SELECT v.user_id, v.visit_date, COUNT(t.transaction_date) AS txn_count\n  FROM Visits v\n  LEFT JOIN Transactions t\n    ON v.user_id=t.user_id AND v.visit_date=t.transaction_date\n  GROUP BY v.user_id, v.visit_date\n)\nSELECT txn_count AS transactions_count, COUNT(*) AS visits_count\nFROM visits\nGROUP BY txn_count\nORDER BY txn_count;`,
+    insight:'LEFT JOIN to count transactions per visit (zero when no match). Outer GROUP BY on that count gives the distribution. A harder variant asks you to fill in missing counts with 0.' },
+
+  { id:'lc1341', date:'2026-05-15', title:'Movie Rating (LC #1341)', diff:'medium', topic:'aggregation', source:'LeetCode #1341',
+    problem:'Find the user with the most movie ratings (ties: alphabetical name) and the movie with the highest average rating in February 2020 (ties: alphabetical title).',
+    sql:`(SELECT u.name AS results\n FROM MovieRating mr JOIN Users u ON mr.user_id=u.user_id\n GROUP BY mr.user_id ORDER BY COUNT(*) DESC, u.name LIMIT 1)\nUNION ALL\n(SELECT m.title\n FROM MovieRating mr JOIN Movies m ON mr.movie_id=m.movie_id\n WHERE mr.created_at BETWEEN '2020-02-01' AND '2020-02-29'\n GROUP BY mr.movie_id ORDER BY AVG(mr.rating) DESC, m.title LIMIT 1);`,
+    insight:'UNION ALL two separate ranked queries — each returns one row. ORDER BY aggregate + name/title handles tie-breaking. UNION ALL (not UNION) preserves both rows even if names match.' },
+
+  { id:'lc1350', date:'2026-05-15', title:'Students With Invalid Departments (LC #1350)', diff:'easy', topic:'joins', source:'LeetCode #1350',
+    problem:'Find students enrolled in departments that no longer exist.',
+    sql:`SELECT s.id, s.name\nFROM Students s\nLEFT JOIN Departments d ON s.department_id = d.id\nWHERE d.id IS NULL;`,
+    insight:'LEFT JOIN + IS NULL is the cleanest way to find orphaned rows (rows referencing a non-existent foreign key). Equivalent to NOT IN but null-safe.' },
+
+  { id:'lc1355', date:'2026-05-15', title:'Activity Participants (LC #1355)', diff:'medium', topic:'aggregation', source:'LeetCode #1355',
+    problem:'Find activities participated in by neither the most nor fewest users.',
+    sql:`SELECT activity\nFROM Friends\nGROUP BY activity\nHAVING COUNT(*) != (SELECT COUNT(*) FROM Friends GROUP BY activity ORDER BY COUNT(*) DESC LIMIT 1)\n  AND COUNT(*) != (SELECT COUNT(*) FROM Friends GROUP BY activity ORDER BY COUNT(*) LIMIT 1);`,
+    insight:'Two scalar subqueries for max and min counts. Exclude groups matching either extreme. Works cleanly when there is exactly one max and one min.' },
+
+  { id:'lc1364', date:'2026-05-16', title:'Number of Trusted Contacts of a Customer (LC #1364)', diff:'medium', topic:'joins', source:'LeetCode #1364',
+    problem:'For each invoice, report customer name, email, count of contacts, and count of trusted contacts (those who are also customers).',
+    sql:`SELECT i.invoice_id, c.customer_name, i.price,\n  COUNT(con.contact_name) AS contacts_cnt,\n  SUM(con.contact_email IN (SELECT email FROM Customers)) AS trusted_contacts_cnt\nFROM Invoices i\nJOIN Customers c ON i.user_id = c.customer_id\nLEFT JOIN Contacts con ON i.user_id = con.user_id\nGROUP BY i.invoice_id, c.customer_name, i.price\nORDER BY i.invoice_id;`,
+    insight:'SUM(expression IN (subquery)) counts truthy matches inline without a separate JOIN. LEFT JOIN keeps invoices with no contacts.' },
+
+  { id:'lc1393', date:'2026-05-16', title:'Capital Gain/Loss (LC #1393)', diff:'medium', topic:'aggregation', source:'LeetCode #1393',
+    problem:'Report capital gain or loss for each stock: sum of selling prices minus sum of buying prices.',
+    sql:`SELECT stock_name,\n  SUM(CASE WHEN operation='Sell' THEN price ELSE -price END) AS capital_gain_loss\nFROM Stocks\nGROUP BY stock_name;`,
+    insight:'Signed SUM via CASE WHEN: sell prices add, buy prices subtract. One pass, no subqueries needed.' },
+
+  { id:'lc1407', date:'2026-05-16', title:'Top Travellers (LC #1407)', diff:'easy', topic:'joins', source:'LeetCode #1407',
+    problem:'Report each user\'s name and total travel distance, ordered by distance descending then name ascending.',
+    sql:`SELECT u.name, COALESCE(SUM(r.distance), 0) AS travelled_distance\nFROM Users u\nLEFT JOIN Rides r ON u.id = r.user_id\nGROUP BY u.id, u.name\nORDER BY travelled_distance DESC, u.name;`,
+    insight:'COALESCE(SUM(...), 0) returns 0 for users with no rides (SUM of NULLs is NULL). LEFT JOIN keeps all users in the result.' },
+
+  { id:'lc1421', date:'2026-05-16', title:'NPV Queries (LC #1421)', diff:'easy', topic:'joins', source:'LeetCode #1421',
+    problem:'For each (id, year) query, return the NPV value. If not found, return 0.',
+    sql:`SELECT q.id, q.year, COALESCE(n.npv, 0) AS npv\nFROM Queries q\nLEFT JOIN NPV n ON q.id = n.id AND q.year = n.year;`,
+    insight:'LEFT JOIN on composite key (id, year). COALESCE handles missing NPV entries with 0. Simple but tests composite-key join awareness.' },
+
+  { id:'lc1440', date:'2026-05-16', title:'Evaluate Boolean Expression (LC #1440)', diff:'medium', topic:'joins', source:'LeetCode #1440',
+    problem:'Evaluate boolean expressions that reference variables stored in a Variables table.',
+    sql:`SELECT e.left_operand, e.operator, e.right_operand,\n  CASE\n    WHEN e.operator='>' AND v1.value > v2.value THEN 'true'\n    WHEN e.operator='<' AND v1.value < v2.value THEN 'true'\n    WHEN e.operator='=' AND v1.value = v2.value THEN 'true'\n    ELSE 'false'\n  END AS value\nFROM Expressions e\nJOIN Variables v1 ON e.left_operand = v1.name\nJOIN Variables v2 ON e.right_operand = v2.name;`,
+    insight:'Two joins to the same Variables table with different aliases resolve left and right operands. CASE WHEN then evaluates the operator dynamically.' },
+
+  { id:'lc1445', date:'2026-05-16', title:'Apples & Oranges (LC #1445)', diff:'medium', topic:'aggregation', source:'LeetCode #1445',
+    problem:'Report the difference (apples - oranges) sold per day.',
+    sql:`SELECT sale_date,\n  SUM(CASE WHEN fruit='apples' THEN sold_num ELSE -sold_num END) AS diff\nFROM Sales\nGROUP BY sale_date\nORDER BY sale_date;`,
+    insight:'Signed SUM pattern: apples positive, oranges negative. GROUP BY date gives the daily difference in one clean aggregate.' },
+
+  { id:'lc1454', date:'2026-05-16', title:'Active Users (LC #1454)', diff:'medium', topic:'window', source:'LeetCode #1454',
+    problem:'Find users who logged in on 5 or more consecutive days.',
+    sql:`WITH deduped AS (\n  SELECT DISTINCT id, login_date FROM Logins\n),\nislands AS (\n  SELECT id, login_date,\n    login_date - INTERVAL ROW_NUMBER() OVER (PARTITION BY id ORDER BY login_date) DAY AS grp\n  FROM deduped\n)\nSELECT DISTINCT a.id, u.name\nFROM islands a\nJOIN Accounts u ON a.id = u.id\nGROUP BY a.id, u.name, a.grp\nHAVING COUNT(*) >= 5\nORDER BY a.id;`,
+    insight:'Deduplicate logins first (a user may log in multiple times per day). Then apply the island-detection trick partitioned by user. HAVING >= 5 finds the qualifying consecutive streaks.' },
+
+  { id:'lc1484', date:'2026-05-16', title:'Group Sold Products By The Date (LC #1484)', diff:'easy', topic:'aggregation', source:'LeetCode #1484',
+    problem:'For each date, find the number of distinct products sold and their sorted comma-separated names.',
+    sql:`SELECT sell_date,\n  COUNT(DISTINCT product) AS num_sold,\n  GROUP_CONCAT(DISTINCT product ORDER BY product SEPARATOR ',') AS products\nFROM Activities\nGROUP BY sell_date\nORDER BY sell_date;`,
+    insight:'GROUP_CONCAT with DISTINCT + ORDER BY aggregates names into a sorted string per group — a MySQL-specific function. In PostgreSQL use STRING_AGG(DISTINCT product ORDER BY product).' }
+];
+
+function initData() {
+  const existing = load();
+  const existingIds = new Set(existing.map(p => p.id));
+  const toAdd = seed.filter(p => !existingIds.has(p.id));
+  if (toAdd.length > 0) save([...existing, ...toAdd]);
+}
+
+// ── STATE ─────────────────────────────────────────────────
+let activeFilter = 'all';
+let searchQuery = '';
+let editingId = null;
+
+// ── SQL HIGHLIGHT ─────────────────────────────────────────
+function highlight(sql) {
+  const keywords = ['SELECT','FROM','WHERE','JOIN','LEFT','RIGHT','INNER','OUTER','FULL','ON','AS','GROUP BY','ORDER BY','HAVING','LIMIT','OFFSET','UNION','ALL','DISTINCT','WITH','CTE','PARTITION BY','OVER','ROWS','BETWEEN','UNBOUNDED','PRECEDING','CURRENT ROW','FOLLOWING','AND','OR','NOT','IN','IS','NULL','CASE','WHEN','THEN','ELSE','END','INSERT','UPDATE','DELETE','CREATE','DROP','ALTER','TABLE','INDEX','VIEW','COUNT','SUM','AVG','MAX','MIN','RANK','ROW_NUMBER','DENSE_RANK','LAG','LEAD','COALESCE','NULLIF','CAST','INTERVAL','EXISTS','BY','SET','VALUES','INTO'];
+  let h = sql.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  h = h.replace(/--[^\n]*/g, m => `<span class="cmt">${m}</span>`);
+  h = h.replace(/'[^']*'/g, m => `<span class="str">${m}</span>`);
+  h = h.replace(/\b(\d+)\b/g, `<span class="num">$1</span>`);
+  const kwRe = new RegExp(`\\b(${keywords.join('|')})\\b`, 'g');
+  h = h.replace(kwRe, `<span class="kw">$1</span>`);
+  return h;
+}
+
+// ── CALENDAR ─────────────────────────────────────────────
+function renderCalendar(data) {
+  const grid = document.getElementById('cal-grid');
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('cal-label').textContent = `${months[month]} ${year} — activity`;
+
+  const solvedDates = new Set(data.map(p => p.date));
+  grid.innerHTML = '';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (solvedDates.has(dateStr) ? ' solved' : '') + (d === now.getDate() ? ' today' : '');
+    cell.setAttribute('data-tip', `${months[month]} ${d}`);
+    grid.appendChild(cell);
+  }
+}
+
+// ── STATS ─────────────────────────────────────────────────
+function computeStreak(data) {
+  const dates = [...new Set(data.map(p => p.date))].sort().reverse();
+  if (!dates.length) return 0;
+  const today = new Date().toISOString().slice(0,10);
+  if (dates[0] !== today && dates[0] !== new Date(Date.now()-86400000).toISOString().slice(0,10)) return 0;
+  let streak = 0;
+  let check = new Date(dates[0]);
+  for (const d of dates) {
+    if (d === check.toISOString().slice(0,10)) { streak++; check.setDate(check.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+
+function thisWeek(data) {
+  const now = new Date();
+  const mon = new Date(now); mon.setDate(now.getDate() - now.getDay() + 1);
+  mon.setHours(0,0,0,0);
+  return data.filter(p => new Date(p.date) >= mon).length;
+}
+
+function updateStats(data) {
+  const streak = computeStreak(data);
+  document.getElementById('s-total').textContent = data.length;
+  document.getElementById('s-streak').textContent = streak;
+  document.getElementById('s-topics').textContent = new Set(data.map(p=>p.topic)).size;
+  document.getElementById('s-this-week').textContent = thisWeek(data);
+  document.getElementById('sidebar-streak').textContent = streak;
+  document.getElementById('cnt-all').textContent = data.length;
+  ['easy','medium','hard'].forEach(d => {
+    document.getElementById(`cnt-${d}`).textContent = data.filter(p=>p.diff===d).length;
+  });
+}
+
+// ── CARDS ─────────────────────────────────────────────────
+function getFiltered() {
+  let data = load();
+  if (activeFilter !== 'all') {
+    data = data.filter(p => p.diff === activeFilter || p.topic === activeFilter);
+  }
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    data = data.filter(p => p.title.toLowerCase().includes(q) || p.problem.toLowerCase().includes(q) || p.topic.toLowerCase().includes(q));
+  }
+  return data.sort((a,b) => b.date.localeCompare(a.date));
+}
+
+function renderCards() {
+  const container = document.getElementById('cards-container');
+  const data = getFiltered();
+  const all = load();
+  updateStats(all);
+  renderCalendar(all);
+
+  if (!data.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="big">📭</div>
+      <p>No problems yet for this filter.<br>Hit <strong>+ Add problem</strong> to log your first one.</p>
+    </div>`;
+    return;
+  }
+
+  const dateGroups = {};
+  data.forEach(p => {
+    const d = new Date(p.date);
+    const label = d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    if (!dateGroups[label]) dateGroups[label] = [];
+    dateGroups[label].push(p);
+  });
+
+  let html = '<div class="cards-list">';
+  Object.entries(dateGroups).forEach(([label, problems]) => {
+    html += `<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin:8px 0 4px;">${label}</div>`;
+    problems.forEach(p => {
+      html += `
+      <div class="card" id="card-${p.id}">
+        <div class="card-header" onclick="toggleCard('${p.id}')">
+          <span class="diff-badge diff-${p.diff}">${p.diff}</span>
+          <span class="card-title">${p.title}</span>
+          <span class="topic-pill">${p.topic}</span>
+          <div class="card-actions" onclick="event.stopPropagation()">
+            <button class="icon-btn" onclick="editProblem('${p.id}')" title="Edit">✏️</button>
+            <button class="icon-btn del" onclick="deleteProblem('${p.id}')" title="Delete">🗑</button>
+          </div>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="card-body">
+          <p class="problem-text">${p.problem}</p>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">SQL</span>
+              ${p.source ? `<span style="font-size:10px;font-family:var(--mono);color:var(--muted)">${p.source}</span>` : ''}
+              <button class="copy-btn" onclick="copyCode('${p.id}',this)">copy</button>
+            </div>
+            <pre id="sql-${p.id}">${highlight(p.sql)}</pre>
+          </div>
+          ${p.insight ? `<div class="insight-box"><strong>Key insight:</strong> ${p.insight}</div>` : ''}
+        </div>
+      </div>`;
+    });
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function toggleCard(id) {
+  document.getElementById(`card-${id}`).classList.toggle('open');
+}
+
+function copyCode(id, btn) {
+  const data = load();
+  const p = data.find(x => x.id === id);
+  if (!p) return;
+  navigator.clipboard.writeText(p.sql).then(() => {
+    btn.textContent = 'copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function deleteProblem(id) {
+  if (!confirm('Delete this problem?')) return;
+  const data = load().filter(p => p.id !== id);
+  save(data);
+  renderCards();
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openModal(prefill) {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Log a problem';
+  ['title','problem','sql','insight','source'].forEach(f => {
+    document.getElementById(`f-${f}`).value = prefill?.[f] || '';
+  });
+  document.getElementById('f-diff').value = prefill?.diff || 'medium';
+  document.getElementById('f-topic').value = prefill?.topic || 'joins';
+  document.getElementById('modal').classList.add('open');
+}
+
+function editProblem(id) {
+  const p = load().find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Edit problem';
+  document.getElementById('f-title').value = p.title;
+  document.getElementById('f-problem').value = p.problem;
+  document.getElementById('f-sql').value = p.sql;
+  document.getElementById('f-insight').value = p.insight || '';
+  document.getElementById('f-source').value = p.source || '';
+  document.getElementById('f-diff').value = p.diff;
+  document.getElementById('f-topic').value = p.topic;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editingId = null;
+}
+function closeModalBg(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+function saveProblem() {
+  const title = document.getElementById('f-title').value.trim();
+  const sql   = document.getElementById('f-sql').value.trim();
+  if (!title || !sql) { alert('Title and SQL solution are required.'); return; }
+
+  const data = load();
+  if (editingId) {
+    const idx = data.findIndex(p => p.id === editingId);
+    if (idx > -1) {
+      data[idx] = { ...data[idx],
+        title, sql,
+        problem: document.getElementById('f-problem').value.trim(),
+        insight: document.getElementById('f-insight').value.trim(),
+        source:  document.getElementById('f-source').value.trim(),
+        diff:    document.getElementById('f-diff').value,
+        topic:   document.getElementById('f-topic').value,
+      };
+    }
+  } else {
+    data.unshift({
+      id: 'p' + Date.now(),
+      date: new Date().toISOString().slice(0,10),
+      title, sql,
+      problem: document.getElementById('f-problem').value.trim(),
+      insight: document.getElementById('f-insight').value.trim(),
+      source:  document.getElementById('f-source').value.trim(),
+      diff:    document.getElementById('f-diff').value,
+      topic:   document.getElementById('f-topic').value,
+    });
+  }
+  save(data);
+  closeModal();
+  renderCards();
+}
+
+// ── FILTERS / SEARCH ──────────────────────────────────────
+function setFilter(f, btn) {
+  activeFilter = f;
+  searchQuery = '';
+  document.querySelector('.search').value = '';
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const titles = { all:'All problems', easy:'Easy problems', medium:'Medium problems', hard:'Hard problems',
+    joins:'JOINs', window:'Window functions', cte:'CTEs', aggregation:'Aggregation',
+    subqueries:'Subqueries', indexes:'Indexes / Performance', other:'Other' };
+  document.getElementById('view-title').textContent = titles[f] || f;
+  renderCards();
+}
+
+function handleSearch(q) {
+  searchQuery = q;
+  renderCards();
+}
+
+// ── INIT ──────────────────────────────────────────────────
+initData();
+renderCards();
+</script>
+</body>
+</html>
